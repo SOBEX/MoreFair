@@ -193,41 +193,41 @@ export const useEta = (ranker: Ranker) => {
 };
 
 function solveQuadratic(
-  accelerationDiff: Decimal,
-  speedDiff: Decimal,
-  pointDiff: Decimal
+  acceleration: Decimal,
+  velocity: Decimal,
+  position: Decimal,
+  select: (x1: Decimal, x2: Decimal) => Decimal
 ): Decimal {
-  // IF Acceleration is equal, only check speed
-  if (accelerationDiff.eq_tolerance(new Decimal(0), Number.EPSILON)) {
-    const flatTime = pointDiff.negate().div(speedDiff);
-    return flatTime.cmp(new Decimal(0)) > 0
-      ? flatTime
-      : new Decimal(Number.POSITIVE_INFINITY);
+  // If Acceleration is equal, only check speed
+  if (acceleration.eq_tolerance(new Decimal(0), Number.EPSILON)) {
+    if (velocity.eq_tolerance(new Decimal(0), Number.EPSILON)) {
+      if (position.eq_tolerance(new Decimal(0), Number.EPSILON)) {
+        return new Decimal(0);
+      }
+      return new Decimal(Number.NaN);
+    }
+    return position.negate().div(velocity);
   }
 
   // b^2 - 4ac
-  const discriminant = speedDiff
+  const discriminant = velocity
     .pow(2)
-    .sub(accelerationDiff.mul(pointDiff).mul(4));
+    .sub(acceleration.mul(position).mul(4));
   if (discriminant.cmp(new Decimal(0)) < 0)
-    return new Decimal(Number.POSITIVE_INFINITY);
+    return new Decimal(Number.NaN);
 
   // -b +- sqrt(b^2 - 4ac) / 2a
-  const root1 = speedDiff
+  const root1 = velocity
     .negate()
     .add(discriminant.sqrt())
-    .div(accelerationDiff.mul(new Decimal(2)));
-  const root2 = speedDiff
+    .div(acceleration.mul(new Decimal(2)));
+  const root2 = velocity
     .negate()
     .sub(discriminant.sqrt())
-    .div(accelerationDiff.mul(new Decimal(2)));
+    .div(acceleration.mul(new Decimal(2)));
+  return select(root1, root2);
+}
 
-  if (root1.cmp(new Decimal(0)) > 0 && root2.cmp(new Decimal(0)) > 0) {
-    return root1.min(root2);
-  }
+function solveRankerRanker(ranker: Ranker, target: Ranker) {
 
-  const maxRoot = root1.max(root2);
-  if (maxRoot.cmp(new Decimal(0)) < 0)
-    return new Decimal(Number.POSITIVE_INFINITY);
-  else return maxRoot;
 }
